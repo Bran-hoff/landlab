@@ -34,3 +34,11 @@ or you can just edit `.git/config` and change the URLs there. The `.git/config` 
 
 or you can open the repository in Github Desktop and get help from friendly GUIs. 
  
+To solve the issue above, I ran
+`git remote set-url origin https://github.com/landlab/landlab/`
+`git fetch` 
+to get all the files branches and updates from the Landlab Team.
+then 
+`git remote set-url origin https://github.com/ChristinaB/landlab/`
+`git fetch' 
+to get all the changes I've made recently in my fork of Landlab, using my Landlab repository URL.  
