@@ -26,6 +26,6 @@ $ git fetch upstream
 
 ## Branch Enlightenment (for dark moments detangling workflows)
 
-1.  Fatal error!  The system cannot find the file specified.  If you are on your desktop in your developer Landlab folder, and you have added a branch, and on the correct branch, but get an error trying to set upstream, add remote, fetch or pull changes from the URL repository (you know they are there, you can see them, why can't you get them on the desktop!).   The solution is likely if you resolve the "upstream confusion" that may have occurred when you set up the branch and used git:// instead of https://   Here is an example of the error message from Github Desktop. [!img](https://github.com/ChristinaB/landlab/blob/ChristinaB-kickstart/docs/source/images/annoyingbrancherror.png)
+1.  Fatal error!  The system cannot find the file specified.  If you are on your desktop in your developer Landlab folder, and you have added a branch, and on the correct branch, but get an error trying to set upstream, add remote, fetch or pull changes from the URL repository (you know they are there, you can see them, why can't you get them on the desktop!).   The solution is likely if you resolve the "upstream confusion" that may have occurred when you set up the branch and used git:// instead of https://   Here is an example of the error message from Github Desktop. [!](https://github.com/ChristinaB/landlab/blob/ChristinaB-kickstart/docs/source/images/annoyingbrancherror.png)
 
 $ 
