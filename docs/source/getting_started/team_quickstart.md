@@ -4,11 +4,15 @@ How we do it (Landlab Network Sediment Routing Team Hack Activities May 2020):
 
 Follow instructions and you will have your own fork, just like University of Washington Landlab developers: e.g  github.com/ChristinaB/landlab   github.com/ - shelby -fix this/landlab      zhuoran    jeff
 
+Set upstream is automatically set to 
+`git remote add upstream https://github.com/landlab/landlab`  - this command goes into the config.git file to see that the team landlab repository is the upstream. 
+
+`git remote add upstream git://github.com/landlab/landlab.git`
+
+
 2.  The second that your fork is created, it may quickly be out of sync with the main trunk - [Keep Landlab Updated](https://landlab.readthedocs.io/en/master/development/install/updating.html)
 
 `git fetch upstream`
-
-[to do - address nuances of what to fetch when working on a team, origin? upstream? whose remote? 
 
 Update Landlab Master: 
 `git remote set-url origin https://github.com/landlab/landlab/`
@@ -27,12 +31,27 @@ Branch leaders - Add Collaborators to your Branch in Github, Settings, Manage Ac
 3b. 
 Branch contributors: 
 
-Step 1.  Fork Allison's branch
+
+Step 1.  DO NOT MAKE A NEW FORK OF LANDLAB from your Branch Contributor's Fork. Everyone tries to do this and it is not an ideal process. 
 
 Step 2. 
-Code to jump onto Allison's branches:
-open git-bash (or your preferred terminal) within your local landlab branch
-check your remotes with $git remote -v (if you don't see a remote with a link to her fork of landlab, you'll need to add one)
+Code to check all the Landlab Branches
+
+`git branch -a -vv`
+
+Code to jump onto Allison's Network Sediment branches:
+
+open git-bash (or your preferred terminal) within your local landlab development fork:  e.g. Christina cloned github.com/landlab to her local desktop and has a github repository called /landlab.  
+
+Check all the amazing Landlab work happening on other branches
+'git branch -a -vv'
+
+The 'team master' is called HEAD.  Avoid using 'master' as in used in all the other confusing Github tutorials online. 
+
+Check your remotes with 
+`git remote -v'   (if you don't see a remote with a link to her fork of landlab, you'll need to add one)
+
+
 add allison's fork as: $ git remote add pfeiffer https://github.com/pfeiffea/landlab.git
 then get her work from this remote with: $git fetch pfeiffer
 go into whatever your preferred branch of her fork as $git checkout 'branch_name' (ex. $git checkout create_bed_sed_initializer)
