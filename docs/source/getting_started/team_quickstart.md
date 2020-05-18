@@ -1,4 +1,4 @@
-How we do it:
+How we do it (Landlab Network Sediment Routing Team Hack Activities May 2020):
 
 1. To start developing with the Landlab Community, start here: [Developer Installation Instructions](https://landlab.readthedocs.io/en/master/development/install/index.html#developer-install)
 
@@ -6,17 +6,30 @@ Follow instructions and you will have your own fork, just like University of Was
 
 2.  The second that your fork is created, it may quickly be out of sync with the main trunk - [Keep Landlab Updated](https://landlab.readthedocs.io/en/master/development/install/updating.html)
 
-$ git fetch upstream
+`git fetch upstream`
 
 [to do - address nuances of what to fetch when working on a team, origin? upstream? whose remote? 
 
-3.  Create a new branch
+Update Landlab Master: 
+`git remote set-url origin https://github.com/landlab/landlab/`
+`git fetch` 
 
-4.  Add Collaborators
+Update Branch for other work on other Branches : 
+`git remote set-url origin https://github.com/ChristinaB/landlab/`
+`git fetch` 
+
+3.  Make a plan for a new branch
+
+3a.  Add Collaborators
 
 Branch leaders - Add Collaborators to your Branch in Github, Settings, Manage Access, Invite Collaborators. 
 
+3b. 
 Branch contributors: 
+
+Step 1.  Fork Allison's branch
+
+Step 2. 
 Code to jump onto Allison's branches:
 open git-bash (or your preferred terminal) within your local landlab branch
 check your remotes with $git remote -v (if you don't see a remote with a link to her fork of landlab, you'll need to add one)
