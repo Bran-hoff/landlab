@@ -14,6 +14,23 @@ $ git fetch upstream
 
 4.  Add Collaborators
 
+Branch leaders - Add Collaborators to your Branch in Github, Settings, Manage Access, Invite Collaborators. 
+
+Branch contributors: 
+Code to jump onto Allison's branches:
+open git-bash (or your preferred terminal) within your local landlab branch
+check your remotes with $git remote -v (if you don't see a remote with a link to her fork of landlab, you'll need to add one)
+add allison's fork as: $ git remote add pfeiffer https://github.com/pfeiffea/landlab.git
+then get her work from this remote with: $git fetch pfeiffer
+go into whatever your preferred branch of her fork as $git checkout 'branch_name' (ex. $git checkout create_bed_sed_initializer)
+
+To push changes you've made:
+$git add 'file/name/here'
+$git commit -m "here are my comments on these changes"
+$git push
+
+you may also need to '$git pull' before you push
+
 5.  Deveop on a Collaborator Branch, develop on your remote, keep your master updated to the Collaborator branch
 
 6.  Add, commmit and do a pull request to add your contributions to a Landlab branch
