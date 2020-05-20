@@ -1,4 +1,8 @@
-How we do it (Landlab Network Sediment Routing Team Hack Activities May 2020):
+# Team Collaborations using Github and Landlab 
+
+#### This is a case study with example team workflows inspired by the Landlab Network Sediment Routing Hackathon Activities May, 18 2020.
+
+Most online tutorials for Github are incredibly helpful, however, we have noticed a few key concepts that can slow down a team with members who 1) are not yet Github gurus, 2) have not yet absorbed all the details that make Landlab a visionary modeling toolkit, and/or 3) are very excited and just wnat to get to the fun part of pushing and pulling - not the laborious strategizing for future file management hygiene. 
 
 1. To start developing with the Landlab Community, start here: [Developer Installation Instructions](https://landlab.readthedocs.io/en/master/development/install/index.html#developer-install)
 
