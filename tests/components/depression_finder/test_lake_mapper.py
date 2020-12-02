@@ -1997,3 +1997,67 @@ def test_find_lowest_node_on_lake_perimeter_c():
     assert find_lowest_node_on_lake_perimeter_c(
         node_nbrs, flood_status, elev, nodes_this_depression, pit_count, BIG_ELEV
     ) == (0, 2)
+
+
+def test_all_boundaries_are_closed():
+    grid = RasterModelGrid((10, 10), xy_spacing=10.0)
+    grid.set_closed_boundaries_at_grid_edges(True, True, True, True)
+    z = grid.add_zeros("node", "topographic__elevation")
+    z += grid.x_of_node.copy() + grid.y_of_node.copy()
+    z[25] -= 40
+    fa = FlowAccumulator(
+        grid, depression_finder="DepressionFinderAndRouter", routing="D4"
+    )
+    with pytest.raises(ValueError):
+        fa.run_one_step()
+
+
+def test_precision_in_cython():
+    """
+    This test confirms no issues with Cython precision matching of floats and
+    Numpy array C++ doubles. Per alexmitchell @issue 1219 (now fixed).
+
+    Bit of a smoke test on the whole component, as this is how the issue was
+    found.
+    """
+    node_spacing = 100
+    input_topo = np.array(
+        [
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 90.0, 80.0, 90.0, 90.0, 0.0],
+            [0.0, 90.0, 32.0, 32.000001, 90.0, 0.0],  # precision matters here
+            [0.0, 90.0, 90.0, 1.0, 90.0, 0.0],
+            [0.0, 90.0, 90.0, 90.0, 90.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=np.float,
+    )
+
+    np_2D_init_topo = np.flipud(input_topo.astype(np.float))
+    map_shape = np_2D_init_topo.shape
+    np_1D_init_topo = np_2D_init_topo.ravel()
+
+    mg = RasterModelGrid(map_shape, node_spacing)
+    mg.add_field("node", "topographic__elevation", np_1D_init_topo, units="m")
+    mg.set_closed_boundaries_at_grid_edges(False, False, False, False)
+    # Set up flow router component and run it once
+    flow_router = FlowAccumulator(
+        mg, flow_director="FlowDirectorD8", depression_finder=DepressionFinderAndRouter
+    )
+
+    flow_router.run_one_step()
+    flow_router.depression_finder.depression_outlet_map.reshape(mg.shape)
+
+    # formerly, this concluded that 32.000001 < 32., and so terminated the
+    # fill algo with only one lake node, but in fact:
+    correct_map = np.array(
+        [
+            [-1, -1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1, -1],
+            [-1, -1, -1, 26, -1, -1],
+            [-1, -1, 26, 26, -1, -1],
+            [-1, -1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1, -1],
+        ]
+    ).ravel()
+    assert np.all(flow_router.depression_finder.depression_outlet_map == correct_map)

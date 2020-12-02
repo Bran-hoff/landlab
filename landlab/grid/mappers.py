@@ -22,6 +22,7 @@ Grid mapping functions
     ~landlab.grid.mappers.map_downwind_node_link_mean_to_node
     ~landlab.grid.mappers.map_value_at_upwind_node_link_max_to_node
     ~landlab.grid.mappers.map_value_at_downwind_node_link_max_to_node
+    ~landlab.grid.mappers.map_link_vector_components_to_node
     ~landlab.grid.mappers.dummy_func_to_demonstrate_docstring_modification
 
 Each link has a *tail* and *head* node. The *tail* nodes are located at the
@@ -870,6 +871,7 @@ def map_upwind_node_link_mean_to_node(grid, var_name, out=None):
     """
     if out is None:
         out = grid.empty(at="node")
+    out[:] = 0.0
 
     if type(var_name) is str:
         var_name = grid.at_link[var_name]
@@ -879,8 +881,8 @@ def map_upwind_node_link_mean_to_node(grid, var_name, out=None):
     vals_above_zero = vals_in_positive > 0.0
     total_vals = np.sum(vals_in_positive * vals_above_zero, axis=1)
     link_count = np.sum(vals_above_zero, axis=1)
-    np.divide(total_vals, link_count, out=out)
-    out[np.isnan(out)] = 0.0
+    np.divide(total_vals, link_count, out=out, where=link_count != 0)
+    out[link_count == 0] = 0.0
 
     return out
 
@@ -940,6 +942,7 @@ def map_downwind_node_link_mean_to_node(grid, var_name, out=None):
     """
     if out is None:
         out = grid.empty(at="node")
+    out[:] = 0.0
 
     if type(var_name) is str:
         var_name = grid.at_link[var_name]
@@ -949,8 +952,7 @@ def map_downwind_node_link_mean_to_node(grid, var_name, out=None):
     vals_above_zero = vals_in_positive > 0.0
     total_vals = np.sum(vals_in_positive * vals_above_zero, axis=1)
     link_count = np.sum(vals_above_zero, axis=1)
-    np.divide(total_vals, link_count, out=out)
-    out[np.isnan(out)] = 0.0
+    np.divide(total_vals, link_count, out=out, where=link_count != 0)
 
     return out
 
@@ -1452,6 +1454,42 @@ def map_link_vector_sum_to_patch(grid, var_name, ignore_inactive_links=True, out
         vert_sum = np.sum(vert_vals_at_patches, axis=1, out=out[1])
 
     return out
+
+
+def map_link_vector_components_to_node(grid, data_at_link):
+    """Map (x,y) components of link data data_at_link onto nodes.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from landlab import RasterModelGrid, HexModelGrid
+
+    >>> grid = RasterModelGrid((3, 4))
+    >>> link_data = np.arange(grid.number_of_links)
+
+    >>> vx, vy = map_link_vector_components_to_node(grid, link_data)
+    >>> vx[5:7]
+    array([ 7.5, 8.5])
+
+    >>> grid = HexModelGrid((3, 3))
+    >>> link_data = np.zeros(grid.number_of_links) + 0.5 * 3.0**0.5
+    >>> link_data[np.isclose(grid.angle_of_link, 0.0)] = 0.0
+    >>> vx, vy = map_link_vector_components_to_node(grid, link_data)
+    >>> vy
+    array([ 0.,  0.,  0.,  0.,  1.,  1.,  0.,  0.,  0.,  0.])
+    """
+    from landlab import HexModelGrid, RasterModelGrid
+
+    if isinstance(grid, HexModelGrid):
+        from .hex_mappers import map_link_vector_components_to_node_hex
+
+        return map_link_vector_components_to_node_hex(grid, data_at_link)
+    elif isinstance(grid, RasterModelGrid):
+        from .raster_mappers import map_link_vector_components_to_node_raster
+
+        return map_link_vector_components_to_node_raster(grid, data_at_link)
+    else:
+        raise NotImplementedError("Only available for HexModelGrid")
 
 
 def dummy_func_to_demonstrate_docstring_modification(grid, some_arg):

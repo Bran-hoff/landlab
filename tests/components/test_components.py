@@ -19,11 +19,11 @@ def test_component_metadata(Comp):
         "HackCalculator",
         "Lithology",
         "LithoLayers",
+        "NetworkSedimentTransporter",
         "Profiler",
         "SoilMoisture",
         "Vegetation",
     ):
-        # print(Comp.name)
         grid = RasterModelGrid((10, 10))
 
         assert Comp._unit_agnostic in (True, False)
@@ -97,7 +97,7 @@ def test_component_metadata(Comp):
             if Comp._info[name]["mapping"] not in _VALID_LOCS:
                 raise ValueError(
                     "{component} mapping for variable: {name} is invalid: {at}".format(
-                        component=Comp._name, name=name, at=at, attribute=attribute
+                        component=Comp._name, name=name, at=at,
                     )
                 )
 

@@ -3,12 +3,14 @@
 grids for 2D numerical models.
 
 Do NOT add new documentation here. Grid documentation is now built in a
-semi- automated fashion. To modify the text seen on the web, edit the
+semi-automated fashion. To modify the text seen on the web, edit the
 files `docs/text_for_[gridfile].py.txt`.
 """
+import fnmatch
 from functools import lru_cache
 
 import numpy as np
+import xarray as xr
 
 from landlab.utils.decorators import make_return_array_immutable
 
@@ -19,7 +21,11 @@ from ..layers.eventlayers import EventLayersMixIn
 from ..layers.materiallayers import MaterialLayersMixIn
 from ..utils.decorators import cache_result_in_object
 from . import grid_funcs as gfuncs
-from .decorators import override_array_setitem_and_reset, return_readonly_id_array
+from .decorators import (
+    override_array_setitem_and_reset,
+    return_id_array,
+    return_readonly_id_array,
+)
 from .linkstatus import LinkStatus, set_status_at_link
 from .nodestatus import NodeStatus
 
@@ -251,7 +257,6 @@ def find_true_vector_from_link_vector_pair(L1, L2, b1x, b1y, b2x, b2y):
     return ax, ay
 
 
-# class ModelGrid(ModelDataFieldsMixIn, EventLayersMixIn, MaterialLayersMixIn):
 class ModelGrid(GraphFields, EventLayersMixIn, MaterialLayersMixIn):
 
     """Base class for 2D structured or unstructured grids for numerical models.
@@ -412,6 +417,86 @@ class ModelGrid(GraphFields, EventLayersMixIn, MaterialLayersMixIn):
 
         self._axis_units = tuple(np.broadcast_to(axis_units, self.ndim))
         self._axis_name = tuple(np.broadcast_to(axis_name, self.ndim))
+
+    def fields(self, include="*", exclude=None):
+        """List of fields held by the grid.
+
+        Parameters
+        ----------
+        include : str, or iterable of str, optional
+            Glob-style pattern for field names to include.
+        exclude : str, or iterable of str, optional
+            Glob-style pattern for field names to exclude.
+
+        Returns
+        -------
+        set
+            Filtered set of canonical field names held by the grid
+
+        Examples
+        --------
+        >>> from landlab import RasterModelGrid
+        >>> grid = RasterModelGrid((3, 4))
+        >>> _ = grid.add_full("elevation", 3.0, at="node")
+        >>> _ = grid.add_full("elevation", 4.0, at="link")
+        >>> _ = grid.add_full("temperature", 5.0, at="node")
+
+        >>> sorted(grid.fields())
+        ['at_link:elevation', 'at_node:elevation', 'at_node:temperature']
+        >>> sorted(grid.fields(include="at_node*"))
+        ['at_node:elevation', 'at_node:temperature']
+        >>> sorted(grid.fields(include="at_node*", exclude="*temp*"))
+        ['at_node:elevation']
+        """
+        if isinstance(include, str):
+            include = [include]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
+        canonical_names = set()
+        for at in self.groups | set(["layer"]):
+            canonical_names.update(["at_{0}:{1}".format(at, name) for name in self[at]])
+
+        names = set()
+        for pattern in include:
+            names.update(fnmatch.filter(canonical_names, pattern))
+        for pattern in exclude or []:
+            names.difference_update(fnmatch.filter(canonical_names, pattern))
+
+        return names
+
+    def as_dataset(self, include="*", exclude=None):
+        """Create an xarray Dataset representation of a grid.
+
+        Parameters
+        ----------
+        include : str or iterable or str
+            Glob-style patterns of fields to include in the dataset.
+        exclude : str or iterable or str
+            Glob-style patterns of fields to exclude from the dataset.
+
+        Returns
+        -------
+        Dataset
+            An xarray Dataset representation of a *ModelGrid*.
+        """
+        names = self.fields(include=include, exclude=exclude)
+
+        layer_names = set([name for name in names if name.startswith("at_layer")])
+        names.difference_update(layer_names)
+
+        data = {}
+        for name in names:
+            dim, field_name = name[len("at_") :].split(":")
+            data[name] = ((dim,), getattr(self, "at_" + dim)[field_name])
+
+        for name in layer_names:
+            dim, field_name = name[len("at_") :].split(":")
+            data[name] = (("layer", "cell"), self.at_layer[field_name])
+
+        data["status_at_node"] = (("node",), self.status_at_node)
+
+        return xr.Dataset(data)
 
     @property
     def xy_of_reference(self):
@@ -905,6 +990,93 @@ class ModelGrid(GraphFields, EventLayersMixIn, MaterialLayersMixIn):
         LLCATS: LINF BC
         """
         return np.where(self.status_at_link == LinkStatus.FIXED)[0]
+
+    @return_id_array
+    def link_with_node_status(self, status_at_tail=None, status_at_head=None):
+        """Links with a given node status.
+
+        Parameters
+        ----------
+        status_at_tail : NodeStatus, optional
+            Status of the link tail node.
+        status_at_head : NodeStatus, optional
+            Status of the link head node.
+
+        Returns
+        -------
+        array of int
+            Links with the given tail and head node statuses.
+
+        Examples
+        --------
+        >>> from landlab import RasterModelGrid, NodeStatus
+        >>> grid = RasterModelGrid((4, 5))
+
+        >>> grid.status_at_node[13] = NodeStatus.FIXED_VALUE
+        >>> grid.status_at_node[2] = NodeStatus.CLOSED
+        >>> grid.link_with_node_status(
+        ...     status_at_tail=NodeStatus.CORE, status_at_head=NodeStatus.CORE
+        ... )
+        array([10, 11, 14, 15, 19])
+        >>> grid.link_with_node_status(
+        ...     status_at_tail=NodeStatus.CORE, status_at_head=NodeStatus.FIXED_VALUE
+        ... )
+        array([12, 16, 20, 23, 24])
+        >>> grid.link_with_node_status(
+        ...     status_at_tail=NodeStatus.FIXED_VALUE, status_at_head=NodeStatus.CORE
+        ... )
+        array([ 5,  7,  9, 18])
+
+        >>> grid.link_with_node_status(status_at_head=NodeStatus.CORE)
+        array([ 5,  6,  7,  9, 10, 11, 14, 15, 18, 19])
+        >>> grid.link_with_node_status(status_at_tail=NodeStatus.CORE)
+        array([10, 11, 12, 14, 15, 16, 19, 20, 23, 24])
+        >>> grid.link_with_node_status()
+        array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+               17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30])
+        """
+        masks = []
+        if status_at_tail is not None:
+            masks.append(self.status_at_node[self.node_at_link_tail] == status_at_tail)
+        if status_at_head is not None:
+            masks.append(self.status_at_node[self.node_at_link_head] == status_at_head)
+
+        if len(masks) == 0:
+            return np.arange(self.number_of_links, dtype=int)
+        if len(masks) == 1:
+            return np.where(masks[0])[0]
+        else:
+            return np.where(masks[0] & masks[1])[0]
+
+    @return_id_array
+    def link_with_angle(self, angle, in_degrees=False):
+        """Return array of IDs of links with given angle.
+
+        Examples
+        --------
+        >>> from landlab import HexModelGrid
+        >>> grid = HexModelGrid((3, 3))
+        >>> grid.link_with_angle(0.0)
+        array([  0,  1,  8,  9, 10, 17, 18])
+        >>> grid.link_with_angle(60.0, in_degrees=True)
+        array([  3,  5,  7, 11, 13, 15])
+        >>> grid.link_with_angle(2.0944)  # 120 degrees
+        array([  2,  4,  6, 12, 14, 16])
+        >>> len(grid.link_with_angle(0.5236))  # no links at 30 deg
+        0
+        >>> grid = HexModelGrid((3, 3), orientation='vertical')
+        >>> grid.link_with_angle(30.0, in_degrees=True)
+        array([  1,  3,  8, 10, 15, 17])
+        >>> grid.link_with_angle(1.5708)  # 90 degrees
+        array([ 2,  5,  6,  9, 12, 13, 16])
+        >>> grid.link_with_angle(330.0, in_degrees=True)
+        array([ 0,  4,  7, 11, 14, 18])
+        >>> len(grid.link_with_angle(60.0, in_degrees=True))  # none at 60 deg
+        0
+        """
+        if in_degrees:
+            angle = np.deg2rad(angle % 360.0)
+        return np.where(np.isclose(self.angle_of_link, angle))[0]
 
     @property
     @cache_result_in_object()

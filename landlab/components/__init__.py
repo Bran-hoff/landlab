@@ -20,10 +20,12 @@ from .fracture_grid import FractureGridGenerator
 from .gflex import gFlex
 from .groundwater import GroundwaterDupuitPercolator
 from .hack_calculator import HackCalculator
+from .hand_calculator import HeightAboveDrainageCalculator
 from .lake_fill import LakeMapperBarnes
 from .landslides import LandslideProbability
 from .lateral_erosion import LateralEroder
 from .lithology import LithoLayers, Lithology
+from .network_sediment_transporter import NetworkSedimentTransporter
 from .nonlinear_diffusion import PerronNLDiffuse
 from .normal_fault import NormalFault
 from .overland_flow import (
@@ -50,10 +52,11 @@ from .stream_power import (
     StreamPowerSmoothThresholdEroder,
 )
 from .taylor_nonlinear_hillslope_flux import TaylorNonLinearDiffuser
+from .tidal_flow import TidalFlowCalculator
 from .transport_length_diffusion import TransportLengthHillslopeDiffuser
 from .uniform_precip import PrecipitationDistribution
 from .vegetation_dynamics import Vegetation
-from .weathering import ExponentialWeatherer
+from .weathering import ExponentialWeatherer, ExponentialWeathererIntegrated
 
 COMPONENTS = [
     ChannelProfiler,
@@ -67,6 +70,7 @@ COMPONENTS = [
     DrainageDensity,
     ErosionDeposition,
     ExponentialWeatherer,
+    ExponentialWeathererIntegrated,
     FastscapeEroder,
     FireGenerator,
     Flexure,
@@ -80,6 +84,7 @@ COMPONENTS = [
     gFlex,
     GroundwaterDupuitPercolator,
     HackCalculator,
+    HeightAboveDrainageCalculator,
     KinwaveImplicitOverlandFlow,
     KinwaveOverlandFlowModel,
     LakeMapperBarnes,
@@ -89,6 +94,7 @@ COMPONENTS = [
     LithoLayers,
     Lithology,
     LossyFlowAccumulator,
+    NetworkSedimentTransporter,
     NormalFault,
     OverlandFlow,
     OverlandFlowBates,
@@ -110,6 +116,7 @@ COMPONENTS = [
     StreamPowerEroder,
     StreamPowerSmoothThresholdEroder,
     TaylorNonLinearDiffuser,
+    TidalFlowCalculator,
     TransportLengthHillslopeDiffuser,
     TrickleDownProfiler,
     VegCA,
